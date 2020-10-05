@@ -4,8 +4,8 @@
     <!-- LOGO -->
     <div class="topbar-left">
         <a href="index.html" class="logo">
-                        <span>
-                                <img src="assets/images/logo-light.png" alt="" height="18">
+                        <span class="text-white">
+                                <img src="assets/images/logo-sm.png" alt="" height="18" class="mr-2">Naive Bayes
                             </span>
             <i>
                 <img src="assets/images/logo-sm.png" alt="" height="22">
@@ -31,10 +31,6 @@
                     </a>
                     <div class="dropdown-menu dropdown-menu-right profile-dropdown ">
                         <!-- item-->
-                        <a class="dropdown-item" href="#"><i class="mdi mdi-account-circle m-r-5"></i> Profile</a>
-                        <a class="dropdown-item" href="#"><i class="mdi mdi-wallet m-r-5"></i> My Wallet</a>
-                        <a class="dropdown-item d-block" href="#"><span class="badge badge-success float-right">11</span><i class="mdi mdi-settings m-r-5"></i> Settings</a>
-                        <a class="dropdown-item" href="#"><i class="mdi mdi-lock-open-outline m-r-5"></i> Lock screen</a>
                         <div class="dropdown-divider"></div>
                         <a class="dropdown-item text-danger" href="{{ route('logout') }}"
                            onclick="event.preventDefault();
