@@ -8,12 +8,12 @@
             <ul class="metismenu" id="side-menu">
                 <li class="menu-title">Main</li>
                 <li>
-                    <a href="index.html" class="waves-effect">
+                    <a href="{{route('dashboard')}}" class="waves-effect">
                         <i class="ti-home"></i><span> Dashboard </span>
                     </a>
                 </li>
                 <li>
-                    <a href="calendar.html" class="waves-effect"><i class="ti-layers"></i><span> Film </span></a>
+                    <a href="{{url('film')}}" class="waves-effect"><i class="ti-layers"></i><span> Film </span></a>
                 </li>
             </ul>
 
