@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
-class FilmController extends Controller
+class KomentarController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -15,8 +15,6 @@ class FilmController extends Controller
     public function index()
     {
         //
-        $data['film'] = DB::table('film')->get();
-        return view('film.index',$data);
     }
 
     /**
@@ -27,7 +25,6 @@ class FilmController extends Controller
     public function create()
     {
         //
-        return view('film.create');
     }
 
     /**
@@ -40,11 +37,13 @@ class FilmController extends Controller
     {
         //
         $data = [
-            'film_judul' => $request->input('judul')
+            'komentar_film_id' => $request->input('film_id'),
+            'komentar_akun' => $request->input('akun'),
+            'komentar_isi' => $request->input('komentar'),
         ];
 
-        DB::table('film')->insert($data);
-        return redirect('film');
+        DB::table('komentar')->insert($data);
+        return redirect('film/'.$data['komentar_film_id']);
     }
 
     /**
@@ -56,13 +55,6 @@ class FilmController extends Controller
     public function show($id)
     {
         //
-        $data['film'] = DB::table('film')
-            ->where('film_id',$id)
-            ->first();
-        $data['komentar'] = DB::table('komentar')
-            ->where('komentar_film_id',$id)
-            ->get();
-        return view('film.show',$data);
     }
 
     /**

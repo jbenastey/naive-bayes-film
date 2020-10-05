@@ -30,7 +30,7 @@
                                     <td>{{$value->film_judul}}</td>
                                     <td>{{$value->film_date_created}}</td>
                                     <td>
-                                        <a href="" class="btn btn-sm btn-outline-primary"><i class="ti-eye"></i></a>
+                                        <a href="{{route('film.show',[$value->film_id])}}" class="btn btn-sm btn-outline-primary"><i class="ti-eye"></i></a>
                                         <a href="" class="btn btn-sm btn-outline-success"><i class="ti-pencil"></i></a>
                                         <a href="" class="btn btn-sm btn-outline-danger"><i class="ti-trash"></i></a>
                                     </td>

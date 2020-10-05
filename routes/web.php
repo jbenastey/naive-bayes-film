@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\FilmController;
+use App\Http\Controllers\KomentarController;
 use Illuminate\Support\Facades\Route;
 /*
 |--------------------------------------------------------------------------
@@ -19,3 +20,4 @@ Route::get('/', [DashboardController::class,'index'])->middleware('auth');
 Route::middleware(['auth:sanctum', 'verified'])->get('/dashboard', [DashboardController::class,'index'])->name('dashboard');
 
 Route::resource('film', FilmController::class);
+Route::resource('komentar', KomentarController::class);
