@@ -17,6 +17,7 @@
 
 
     <link href="{{url('assets/css/bootstrap.min.css')}}" rel="stylesheet" type="text/css">
+    <link href="{{url('assets/plugins/dropify/css/dropify.min.css')}}" rel="stylesheet" type="text/css">
     <link href="{{url('assets/css/icons.css')}}" rel="stylesheet" type="text/css">
     <link href="{{url('assets/css/style.css')}}" rel="stylesheet" type="text/css">
 </head>
@@ -64,8 +65,10 @@
 
 <!-- Datatable init js -->
 <script src="{{url('assets/pages/datatables.init.js')}}"></script>
+<script src="{{url('assets/plugins/dropify/js/dropify.min.js')}}"></script>
 <!-- App js -->
 <script src="{{url('assets/js/app.js')}}"></script>
+<script src="{{url('assets/js/custom.js')}}"></script>
 
 </body>
 

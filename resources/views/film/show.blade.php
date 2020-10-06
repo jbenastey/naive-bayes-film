@@ -52,52 +52,31 @@
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title mt-0" id="myModalLabel">Modal Heading</h5>
+                    <h5 class="modal-title mt-0" id="myModalLabel">Upload Komentar</h5>
                     <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
                 </div>
-                <div class="modal-body">
-                    <h5>Overflowing text to show scroll behavior</h5>
-                    <p>Cras mattis consectetur purus sit amet fermentum.
-                        Cras justo odio, dapibus ac facilisis in,
-                        egestas eget quam. Morbi leo risus, porta ac
-                        consectetur ac, vestibulum at eros.</p>
-                    <p>Praesent commodo cursus magna, vel scelerisque
-                        nisl consectetur et. Vivamus sagittis lacus vel
-                        augue laoreet rutrum faucibus dolor auctor.</p>
-                    <p>Aenean lacinia bibendum nulla sed consectetur.
-                        Praesent commodo cursus magna, vel scelerisque
-                        nisl consectetur et. Donec sed odio dui. Donec
-                        ullamcorper nulla non metus auctor
-                        fringilla.</p>
-                    <p>Cras mattis consectetur purus sit amet fermentum.
-                        Cras justo odio, dapibus ac facilisis in,
-                        egestas eget quam. Morbi leo risus, porta ac
-                        consectetur ac, vestibulum at eros.</p>
-                    <p>Praesent commodo cursus magna, vel scelerisque
-                        nisl consectetur et. Vivamus sagittis lacus vel
-                        augue laoreet rutrum faucibus dolor auctor.</p>
-                    <p>Aenean lacinia bibendum nulla sed consectetur.
-                        Praesent commodo cursus magna, vel scelerisque
-                        nisl consectetur et. Donec sed odio dui. Donec
-                        ullamcorper nulla non metus auctor
-                        fringilla.</p>
-                    <p>Cras mattis consectetur purus sit amet fermentum.
-                        Cras justo odio, dapibus ac facilisis in,
-                        egestas eget quam. Morbi leo risus, porta ac
-                        consectetur ac, vestibulum at eros.</p>
-                    <p>Praesent commodo cursus magna, vel scelerisque
-                        nisl consectetur et. Vivamus sagittis lacus vel
-                        augue laoreet rutrum faucibus dolor auctor.</p>
-                    <p>Aenean lacinia bibendum nulla sed consectetur.
-                        Praesent commodo cursus magna, vel scelerisque
-                        nisl consectetur et. Donec sed odio dui. Donec
-                        ullamcorper nulla non metus auctor
-                        fringilla.</p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary waves-effect" data-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-primary waves-effect waves-light">Save changes</button>
-                </div>
+                <form action="{{route('komentar.upload')}}" method="post" enctype="multipart/form-data">
+                    @csrf
+                    <div class="modal-body">
+                        <div class="form-group row">
+                            <div class="col-sm-12">
+                                <a href="{{url('excel/format/komentar.xlsx')}}" class="btn btn-success waves-effect"><i class="fa fa-download"></i> Unduh Format</a>
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label for="example-text-input" class="col-sm-2 col-form-label">Upload</label>
+                            <div class="col-sm-12">
+                                <input type="hidden" name="film_id" value="{{$film->film_id}}">
+                                <input class="dropify" type="file" name="komentar" id="example-text-input" required
+                                       data-allowed-file-extensions="xls xlsx" >
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary waves-effect" data-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary waves-effect waves-light">Simpan</button>
+                    </div>
+                </form>
             </div><!-- /.modal-content -->
         </div><!-- /.modal-dialog -->
     </div>
