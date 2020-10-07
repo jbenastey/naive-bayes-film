@@ -98,4 +98,15 @@ class FilmController extends Controller
     {
         //
     }
+
+    public function submit($id){
+        $komentar = DB::table('komentar')
+            ->where('komentar_film_id',$id)
+            ->get();
+        foreach ($komentar as $key => $value){
+            $clean = trim(preg_replace("/[^a-zA-Z0-9]/", " ", $value->komentar_isi));
+            var_dump($clean);
+        }
+
+    }
 }
