@@ -105,7 +105,8 @@ class FilmController extends Controller
             ->get();
         foreach ($komentar as $key => $value){
             $clean = trim(preg_replace("/[^a-zA-Z0-9]/", " ", $value->komentar_isi));
-            var_dump($clean);
+            $caseFold = strtolower($clean);
+            var_dump($caseFold);
         }
 
     }
