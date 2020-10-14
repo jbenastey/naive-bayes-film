@@ -96,6 +96,7 @@ class ComposerStaticInitc622532352e6e4794d385129154ea00e
         'b6ec61354e97f32c0ae683041c78392a' => __DIR__ . '/..' . '/scrivo/highlight.php/HighlightUtilities/functions.php',
         'b6b991a57620e2fb6b2f66f03fe9ddc2' => __DIR__ . '/..' . '/symfony/string/Resources/functions.php',
         'ed962a97bd972bc82007176b647d4e36' => __DIR__ . '/..' . '/facade/ignition/src/helpers.php',
+        '48a6375642125665354baf6b7954ed7f' => __DIR__ . '/../..' . '/app/Http/Helpers/helpers.php',
     );
 
     public static $prefixLengthsPsr4 = array (
