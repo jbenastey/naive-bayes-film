@@ -45,6 +45,9 @@
         },
         "files": [
             "app/Http/Helpers/helpers.php"
+        ],
+        "classmap": [
+            "app/Class"
         ]
     },
     "autoload-dev": {

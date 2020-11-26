@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use PHPInsight\Sentiment;
 use PhpOffice\PhpSpreadsheet\Reader\Xlsx;
 
 class KomentarController extends Controller
@@ -37,10 +38,29 @@ class KomentarController extends Controller
     public function store(Request $request)
     {
         //
+        $isi = $request->input('komentar');
+        $clean = trim(preg_replace("/[^a-zA-Z0-9]/", " ", $isi));
+        $strings = array(
+            1 => $clean,
+        );
+
+        $sentimen = new Sentiment();
+        $i=1;
+        $class = null;
+        foreach ($strings as $string) {
+            $class = $sentimen->categorise($string);
+            $i++;
+        }
+
+        if ($class == 'netral'){
+            $class = 'positif';
+        }
+
         $data = [
             'komentar_film_id' => $request->input('film_id'),
             'komentar_akun' => $request->input('akun'),
             'komentar_isi' => $request->input('komentar'),
+            'komentar_jenis' => $class,
         ];
 
         DB::table('komentar')->insert($data);
@@ -104,13 +124,34 @@ class KomentarController extends Controller
         $spreadsheet = $reader->load('excel/upload/'.$nama_file);
         $sheet = $spreadsheet->getActiveSheet()->toArray(null, true, true, true);
 
+        $sentimen = new Sentiment();
+
         $numrow = 1;
         foreach ($sheet as $key => $value) {
+
+            $isi = $value['B'];
+            $clean = trim(preg_replace("/[^a-zA-Z0-9]/", " ", $isi));
+            $strings = array(
+                1 => $clean,
+            );
+
+            $i=1;
+            $class = null;
+            foreach ($strings as $string) {
+                $class = $sentimen->categorise($string);
+                $i++;
+            }
+
+            if ($class == 'netral'){
+                $class = 'positif';
+            }
+
             if ($numrow > 1) {
                 $simpan = [
                     'komentar_film_id' => $film_id,
                     'komentar_akun' => $value['A'],
                     'komentar_isi' => $value['B'],
+                    'komentar_jenis' => $class
                 ];
                 DB::table('komentar')->insert($simpan);
             }
