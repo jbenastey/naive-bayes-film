@@ -37,23 +37,42 @@ class KomentarController extends Controller
      */
     public function store(Request $request)
     {
-        //
-        $isi = $request->input('komentar');
-        $clean = trim(preg_replace("/[^a-zA-Z0-9]/", " ", $isi));
-        $strings = array(
-            1 => $clean,
-        );
+//        //
+//        $isi = $request->input('komentar');
+//        $clean = trim(preg_replace("/[^a-zA-Z0-9]/", " ", $isi));
+//        $strings = array(
+//            1 => $clean,
+//        );
+//        $sentimen = new Sentiment();
+//        $i=1;
+//        foreach ($strings as $string) {
+//            $class = $sentimen->categorise($string);
+//            $i++;
+//        }
+//
+//        if ($class == 'netral'){
+//            $class = 'positif';
+//        }
 
-        $sentimen = new Sentiment();
-        $i=1;
         $class = null;
-        foreach ($strings as $string) {
-            $class = $sentimen->categorise($string);
-            $i++;
+        $last = DB::table('komentar')
+            ->orderBy('komentar_date_created','desc')
+            ->take(2)
+            ->get();
+
+        $cek = "";
+        foreach ($last as $item) {
+            $cek .= $item->komentar_jenis;
         }
 
-        if ($class == 'netral'){
-            $class = 'positif';
+        if ($cek == "positifnegatif") {
+            $class = "positif";
+        } elseif ($cek == "positifpositif"){
+            $class = "negatif";
+        } elseif ($cek == "negatifnegatif"){
+            $class = "positif";
+        } elseif ($cek == "negatifpositif"){
+            $class = "negatif";
         }
 
         $data = [
@@ -62,7 +81,6 @@ class KomentarController extends Controller
             'komentar_isi' => $request->input('komentar'),
             'komentar_jenis' => $class,
         ];
-
         DB::table('komentar')->insert($data);
         return redirect('film/'.$data['komentar_film_id']);
     }
@@ -129,21 +147,41 @@ class KomentarController extends Controller
         $numrow = 1;
         foreach ($sheet as $key => $value) {
 
-            $isi = $value['B'];
-            $clean = trim(preg_replace("/[^a-zA-Z0-9]/", " ", $isi));
-            $strings = array(
-                1 => $clean,
-            );
-
-            $i=1;
+//            $isi = $value['B'];
+//            $clean = trim(preg_replace("/[^a-zA-Z0-9]/", " ", $isi));
+//            $strings = array(
+//                1 => $clean,
+//            );
+//
+//            $i=1;
+//            $class = null;
+//            foreach ($strings as $string) {
+//                $class = $sentimen->categorise($string);
+//                $i++;
+//            }
+//
+//            if ($class == 'netral'){
+//                $class = 'positif';
+//            }
             $class = null;
-            foreach ($strings as $string) {
-                $class = $sentimen->categorise($string);
-                $i++;
+            $last = DB::table('komentar')
+                ->orderBy('komentar_date_created','desc')
+                ->take(2)
+                ->get();
+
+            $cek = "";
+            foreach ($last as $item) {
+                $cek .= $item->komentar_jenis;
             }
 
-            if ($class == 'netral'){
-                $class = 'positif';
+            if ($cek == "positifnegatif") {
+                $class = "positif";
+            } elseif ($cek == "positifpositif"){
+                $class = "negatif";
+            } elseif ($cek == "negatifnegatif"){
+                $class = "positif";
+            } elseif ($cek == "negatifpositif"){
+                $class = "negatif";
             }
 
             if ($numrow > 1) {
