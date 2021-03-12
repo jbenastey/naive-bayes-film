@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use PHPInsight\Sentiment;
 
 class FilmController extends Controller
 {
@@ -103,6 +104,12 @@ class FilmController extends Controller
         $komentar = DB::table('komentar')
             ->where('komentar_film_id',$id)
             ->get();
+        $list_word = null;
+        $positifK = 0;
+        $negatifK = 0;
+
+        $sentimen = new Sentiment();
+
         foreach ($komentar as $key => $value){
             $clean = trim(preg_replace("/[^a-zA-Z0-9]/", " ", $value->komentar_isi));
             $caseFold = strtolower($clean);
@@ -110,35 +117,120 @@ class FilmController extends Controller
 
             echo "<pre>";
             foreach ($token as $key2 => $value2) {
-                $normalize = $value2;
-                $ada = DB::table('kata_dasar')
-                    ->where('kata_dasar','like',$value2)
-                    ->first('kata_dasar');
-                if ($ada != null){
-                    $normalize = $ada->kata_dasar;
-                } else {
-                    $getNormalize = json_decode(GetTranslate('id','id',$value2),true);
-                    if (empty($getNormalize['spell']) == false){
-                        $normalize = $getNormalize['spell']['spell_res'];
+                if ($value2!=null){
+                    $normalize = $value2;
+                    $ada = DB::table('kata_dasar')
+                        ->where('kata_dasar','like',$value2)
+                        ->first('kata_dasar');
+                    if ($ada != null){
+                        $normalize = $ada->kata_dasar;
+                    } else {
+                        $getNormalize = json_decode(GetTranslate('id','id',$value2),true);
+                        if (empty($getNormalize['spell']) == false){
+                            $normalize = $getNormalize['spell']['spell_res'];
+                        }
+
                     }
 
+                    $stem = $this->stemming($normalize);
+
+                    if ($stem == null) {
+                        $stem = $normalize;
+                    }
+
+
+                    /*
+                     * Structure by AS
+                     */
+                    if (isset($list_word[$stem]) == false){
+                        $list_word[$stem] = array(
+                            "doc" => 1+$key,
+                            "df"=>1,
+                            "type"=>$value->komentar_jenis
+                        );
+
+//                        if ($sentimen->categorise($stem) == 'negatif'){
+//                        if ($list_word[$stem]['type'] == 'negatif'){
+//                            $negatifK++;
+//                        } else {
+//                            $positifK++;
+//                        }
+                    }
+                    else{
+                        $list_word[$stem] = array(
+                            "doc"=>$list_word[$stem]["doc"].",".($key+1),
+                            "df"=>$list_word[$stem]["df"]+1,
+                            "type"=>$list_word[$stem]["type"].",".$value->komentar_jenis
+                        );
+                    }
+
+                    if ($value->komentar_jenis == 'negatif'){
+                        $negatifK++;
+                    } else {
+                        $positifK++;
+                    }
+//                    var_dump($stem);
                 }
 
-                $stem = $this->stemming($normalize);
-
-                if ($stem == null) {
-                    $stem = $normalize;
-                }
-
-                var_dump($stem);
             }
-
+//
+//            var_dump($positifK);
+//            var_dump($negatifK);
             echo "</pre>";
         }
-
+        $this->doTfIdf($list_word,count($komentar),$positifK,$negatifK);
     }
 
     //------------------------------------------------------------------------------------------
+
+    function doTfIdf($list_word,$totaldoc,$total_positif,$total_negatif){
+        foreach ($list_word as $key=>$value){
+            $expldoc = explode(",",$value["doc"]);
+            $ddf = $totaldoc/count($expldoc);
+            $df = log10($ddf);
+            $idf1 = 1+(log10($ddf));
+            $w=null;
+            foreach ($expldoc as $item){
+                if ($w == null){
+                    $w = $idf1;
+                }
+                else{
+                    $w = $w.",".$idf1;
+                }
+            }
+            $doccat = explode(",",$value['type']);
+
+            $p = (0+1)/(($total_positif+$total_negatif)+$total_positif);
+            $n = (0+1)/(($total_positif+$total_negatif)+$total_negatif);
+            foreach ($doccat as $item){
+                if ($item == "positif"){
+                    $p = ($df+1)/(($total_positif+$total_negatif)+$total_positif);
+                }
+                else{
+                    $n = ($df+1)/(($total_positif+$total_negatif)+$total_negatif);
+                }
+            }
+            echo "<pre>";
+            print_r ($p);
+            print_r ($n);
+            echo "</pre>";
+
+            $list_word[$key] = array(
+                "doc"=>$value['doc'],
+                "df"=>$value['df'],
+                "ddf"=>$ddf,
+                "idf1"=>$idf1,
+                "w"=> $w,
+                "type"=>$value['type'],
+                "p"=>$p,
+                "n"=>$n,
+                "probabilitas"=>null
+            );
+        }
+        echo "<pre>";
+        var_dump($list_word);
+        echo "</pre>";
+    }
 
     function cekKamus($kata)
     {
