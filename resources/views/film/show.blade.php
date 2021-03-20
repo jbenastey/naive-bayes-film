@@ -40,7 +40,7 @@
                                 @endforeach
                                 </tbody>
                             </table>
-                            <a href="{{route('komentar.submit',[$film->film_id])}}" class="btn btn-primary float-right mt-1 waves-effect">Submit</a>
+                            <a href="{{route('film.perhitungan',[$film->film_id])}}" class="btn btn-primary mt-2 waves-effect">Lihat Perhitungan</a>
                         </div>
                     </div>
                 </div> <!-- end col -->

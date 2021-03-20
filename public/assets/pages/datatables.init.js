@@ -6,6 +6,7 @@
 
 $(document).ready(function() {
     $('#datatable').DataTable();
+    $('.zero-configuration').DataTable();
 
     //Buttons examples
     var table = $('#datatable-buttons').DataTable({

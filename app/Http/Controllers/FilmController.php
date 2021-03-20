@@ -100,85 +100,216 @@ class FilmController extends Controller
         //
     }
 
-    public function submit($id){
-        $komentar = DB::table('komentar')
-            ->where('komentar_film_id',$id)
+    public function perhitungan($id){
+        $data['film'] = DB::table('film')
+            ->where('film_id',$id)
+            ->first();
+        $data['hasil'] = DB::table('hasil')
+            ->where('hasil_film_id',$id)
             ->get();
-        $list_word = null;
-        $positifK = 0;
-        $negatifK = 0;
+        return view('film.perhitungan',$data);
+    }
 
-        $sentimen = new Sentiment();
+    public function submit(Request $request,$id){
+        $rasio = $request->input('rasio');
+        if ($rasio != 0){
+            $komentar = DB::table('komentar')
+                ->where('komentar_film_id',$id)
+                ->get();
+            $komentarUji = DB::table('komentar')
+                ->where('komentar_film_id',$id)
+                ->orderBy('komentar_date_created','DESC')
+                ->get();
 
-        foreach ($komentar as $key => $value){
-            $clean = trim(preg_replace("/[^a-zA-Z0-9]/", " ", $value->komentar_isi));
-            $caseFold = strtolower($clean);
-            $token = explode(' ',$caseFold);
+            $jPositif = 0;
+            $jNegatif = 0;
 
-            echo "<pre>";
-            foreach ($token as $key2 => $value2) {
-                if ($value2!=null){
-                    $normalize = $value2;
-                    $ada = DB::table('kata_dasar')
-                        ->where('kata_dasar','like',$value2)
-                        ->first('kata_dasar');
-                    if ($ada != null){
-                        $normalize = $ada->kata_dasar;
-                    } else {
-                        $getNormalize = json_decode(GetTranslate('id','id',$value2),true);
-                        if (empty($getNormalize['spell']) == false){
-                            $normalize = $getNormalize['spell']['spell_res'];
+            $list_word = null;
+            $positifK = 0;
+            $negatifK = 0;
+
+            for ($i = 0; $i <  round(($rasio * 0.01) * count($komentar)); $i++){
+                if ($komentar[$i]->komentar_jenis == 'positif'){
+                    $jPositif++;
+                } else {
+                    $jNegatif++;
+                }
+
+                $clean = trim(preg_replace("/[^a-zA-Z0-9]/", " ", $komentar[$i]->komentar_isi));
+                $caseFold = strtolower($clean);
+                $token = explode(' ',$caseFold);
+
+                foreach ($token as $key2 => $value2) {
+                    if ($value2!=null){
+                        $normalize = $value2;
+                        $ada = DB::table('kata_dasar')
+                            ->where('kata_dasar','like',$value2)
+                            ->first('kata_dasar');
+                        if ($ada != null){
+                            $normalize = $ada->kata_dasar;
+                        } else {
+                            $getNormalize = json_decode(GetTranslate('id','id',$value2),true);
+                            if (empty($getNormalize['spell']) == false){
+                                $normalize = $getNormalize['spell']['spell_res'];
+                            }
+
+                        }
+
+                        $stem = $this->stemming($normalize);
+
+                        if ($stem == null) {
+                            $stem = $normalize;
+                        }
+
+
+                        /*
+                         * Structure by AS
+                         */
+                        if (isset($list_word[$stem]) == false){
+                            $list_word[$stem] = array(
+                                "doc" => 1+$i,
+                                "df"=>1,
+                                "type"=>$komentar[$i]->komentar_jenis
+                            );
+
+    //                        if ($sentimen->categorise($stem) == 'negatif'){
+    //                        if ($list_word[$stem]['type'] == 'negatif'){
+    //                            $negatifK++;
+    //                        } else {
+    //                            $positifK++;
+    //                        }
+                        }
+                        else{
+                            $list_word[$stem] = array(
+                                "doc"=>$list_word[$stem]["doc"].",".($i+1),
+                                "df"=>$list_word[$stem]["df"]+1,
+                                "type"=>$list_word[$stem]["type"].",".$komentar[$i]->komentar_jenis
+                            );
+                        }
+
+                        if ($komentar[$i]->komentar_jenis == 'negatif'){
+                            $negatifK++;
+                        } else {
+                            $positifK++;
+                        }
+    //                    var_dump($stem);
+                    }
+
+                }
+    //
+    //            var_dump($positifK);
+    //            var_dump($negatifK);
+            }
+
+            $rasioTraining = $this->doTfIdf($list_word,round(($rasio * 0.01) * count($komentar)),$positifK,$negatifK);
+
+            $kataUji = null;
+
+            for ($i = 0; $i <  round((1 - ($rasio * 0.01)) * count($komentarUji)); $i++){
+                $clean = trim(preg_replace("/[^a-zA-Z0-9]/", " ", $komentarUji[$i]->komentar_isi));
+                $caseFold = strtolower($clean);
+                $token = explode(' ',$caseFold);
+
+                foreach ($token as $key2 => $value2) {
+                    if ($value2!=null){
+                        $normalize = $value2;
+                        $ada = DB::table('kata_dasar')
+                            ->where('kata_dasar','like',$value2)
+                            ->first('kata_dasar');
+                        if ($ada != null){
+                            $normalize = $ada->kata_dasar;
+                        } else {
+                            $getNormalize = json_decode(GetTranslate('id','id',$value2),true);
+                            if (empty($getNormalize['spell']) == false){
+                                $normalize = $getNormalize['spell']['spell_res'];
+                            }
+
+                        }
+
+                        $stem = $this->stemming($normalize);
+
+                        if ($stem == null) {
+                            $stem = $normalize;
+                        }
+                        foreach ($rasioTraining as $key=>$value) {
+                            if ($stem == $key){
+                                $kataUji[$stem] = [
+                                    'p' => $value['p'],
+                                    'n' => $value['n']
+                                ];break;
+                            } else {
+                                $kataUji[$stem] = [
+                                    'p' => 1/($positifK+($positifK+$negatifK)),
+                                    'n' => 1/($negatifK+($positifK+$negatifK))
+                                ];
+                            }
                         }
 
                     }
 
-                    $stem = $this->stemming($normalize);
-
-                    if ($stem == null) {
-                        $stem = $normalize;
-                    }
-
-
-                    /*
-                     * Structure by AS
-                     */
-                    if (isset($list_word[$stem]) == false){
-                        $list_word[$stem] = array(
-                            "doc" => 1+$key,
-                            "df"=>1,
-                            "type"=>$value->komentar_jenis
-                        );
-
-//                        if ($sentimen->categorise($stem) == 'negatif'){
-//                        if ($list_word[$stem]['type'] == 'negatif'){
-//                            $negatifK++;
-//                        } else {
-//                            $positifK++;
-//                        }
-                    }
-                    else{
-                        $list_word[$stem] = array(
-                            "doc"=>$list_word[$stem]["doc"].",".($key+1),
-                            "df"=>$list_word[$stem]["df"]+1,
-                            "type"=>$list_word[$stem]["type"].",".$value->komentar_jenis
-                        );
-                    }
-
-                    if ($value->komentar_jenis == 'negatif'){
-                        $negatifK++;
-                    } else {
-                        $positifK++;
-                    }
-//                    var_dump($stem);
                 }
-
             }
-//
-//            var_dump($positifK);
-//            var_dump($negatifK);
-            echo "</pre>";
+
+            echo "<pre>";
+            foreach ($rasioTraining as $key=>$value) {
+                $simpanTraining = [
+                    'training_film_id' => $id,
+                    'training_rasio' => $rasio,
+                    'training_kata' => $key,
+                    'training_isi' => json_encode($value)
+                ];
+                DB::table('training')->insert($simpanTraining);
+    //            var_dump($simpanTraining);
+            }
+            $pPositif = $jPositif/round(($rasio * 0.01) * count($komentar));
+            $pNegatif = $jNegatif/round(($rasio * 0.01) * count($komentar));
+
+            $hasilP = $pPositif;
+            $hasilN = $pNegatif;
+            foreach ($kataUji as $key=>$value) {
+                $hasilP *= $value['p'];
+                $hasilN *= $value['n'];
+                $simpanUji = [
+                    'uji_film_id' => $id,
+                    'uji_rasio' => $rasio,
+                    'uji_kata' => $key,
+                    'uji_isi' => json_encode($value)
+                ];
+                DB::table('uji')->insert($simpanUji);
+    //            var_dump($simpanUji);
+            }
+            $akhir = 'negatif';
+            if ($hasilP > $hasilN) {
+                $akhir = 'positif';
+            }
+            $simpanHasil = [
+                'hasil_film_id' => $id,
+                'hasil_hitung' => json_encode([
+                    'p' => $hasilP,
+                    'n' => $hasilN
+                ]),
+                'hasil_rasio' => $rasio,
+                'hasil_akhir' => $akhir
+            ];
+    //        var_dump($simpanHasil);
+            DB::table('hasil')->insert($simpanHasil);
+
         }
-        $this->doTfIdf($list_word,count($komentar),$positifK,$negatifK);
+        redirect('film.perhitungan'.$id);
+
+    }
+
+    public function detailPerhitungan($id){
+        $data['hasil'] = DB::table('hasil')
+            ->where('hasil_id',$id)
+            ->first();
+        $data['training'] = DB::table('training')
+            ->where('training_film_id',$data['hasil']->hasil_film_id)
+            ->get();
+        $data['uji'] = DB::table('uji')
+            ->where('uji_film_id',$data['hasil']->hasil_film_id)
+            ->get();
+        return view('film.detail-perhitungan',$data);
     }
 
     //------------------------------------------------------------------------------------------
@@ -210,11 +341,6 @@ class FilmController extends Controller
                     $n = ($df+1)/(($total_positif+$total_negatif)+$total_negatif);
                 }
             }
-            echo "<pre>";
-            print_r ($p);
-            print_r ($n);
-            echo "</pre>";
-
             $list_word[$key] = array(
                 "doc"=>$value['doc'],
                 "df"=>$value['df'],
@@ -224,12 +350,12 @@ class FilmController extends Controller
                 "type"=>$value['type'],
                 "p"=>$p,
                 "n"=>$n,
-                "probabilitas"=>null
             );
         }
-        echo "<pre>";
-        var_dump($list_word);
-        echo "</pre>";
+        return $list_word;
+//        echo "<pre>";
+//        var_dump($list_word);
+//        echo "</pre>";
     }
 
     function cekKamus($kata)

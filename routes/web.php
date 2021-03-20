@@ -22,4 +22,6 @@ Route::middleware(['auth:sanctum', 'verified'])->get('/dashboard', [DashboardCon
 Route::resource('film', FilmController::class);
 Route::resource('komentar', KomentarController::class);
 Route::post('komentar/upload', [KomentarController::class,'upload'])->name('komentar.upload');
-Route::get('film/submit/{id}', [FilmController::class,'submit'])->name('komentar.submit');
+Route::post('film/submit/{id}', [FilmController::class,'submit'])->name('film.submit');
+Route::get('film/perhitungan/{id}', [FilmController::class,'perhitungan'])->name('film.perhitungan');
+Route::get('film/detail-perhitungan/{id}', [FilmController::class,'detailPerhitungan'])->name('film.detail-perhitungan');
