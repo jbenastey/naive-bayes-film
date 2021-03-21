@@ -56,11 +56,9 @@
                             <div class="col-sm-10">
                                 <select name="rasio" id="" class="form-control" required>
                                     <option value="0" selected disabled>Pilih Rasio</option>
-                                    @foreach($hasil as $key => $value)
-                                        <option value="70" @if($value->hasil_rasio == '70') hidden @endif >70 : 30</option>
-                                        <option value="80" @if($value->hasil_rasio == '80') hidden @endif >80 : 20</option>
-                                        <option value="90" @if($value->hasil_rasio == '90') hidden @endif >90 : 10</option>
-                                    @endforeach
+                                    <option value="70" >70 : 30</option>
+                                    <option value="80" >80 : 20</option>
+                                    <option value="90" >90 : 10</option>
                                 </select>
                             </div>
                         </div>

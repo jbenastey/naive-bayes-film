@@ -118,7 +118,7 @@ class FilmController extends Controller
                 ->get();
             $komentarUji = DB::table('komentar')
                 ->where('komentar_film_id',$id)
-                ->orderBy('komentar_date_created','DESC')
+                ->orderBy('komentar_id','DESC')
                 ->get();
 
             $jPositif = 0;
@@ -205,10 +205,16 @@ class FilmController extends Controller
 
             $kataUji = null;
 
+            $ujiKomentar = [];
+            $idUjiKomentar = [];
+
             for ($i = 0; $i <  round((1 - ($rasio * 0.01)) * count($komentarUji)); $i++){
                 $clean = trim(preg_replace("/[^a-zA-Z0-9]/", " ", $komentarUji[$i]->komentar_isi));
                 $caseFold = strtolower($clean);
                 $token = explode(' ',$caseFold);
+
+                $ujiKomentar[$i] = [];
+                $idUjiKomentar[$i] = $komentarUji[$i]->komentar_id;
 
                 foreach ($token as $key2 => $value2) {
                     if ($value2!=null){
@@ -231,6 +237,10 @@ class FilmController extends Controller
                         if ($stem == null) {
                             $stem = $normalize;
                         }
+
+                        if (isset($stem))
+                        array_push($ujiKomentar[$i],$stem);
+
                         foreach ($rasioTraining as $key=>$value) {
                             if ($stem == $key){
                                 $kataUji[$stem] = [
@@ -250,7 +260,6 @@ class FilmController extends Controller
                 }
             }
 
-            echo "<pre>";
             foreach ($rasioTraining as $key=>$value) {
                 $simpanTraining = [
                     'training_film_id' => $id,
@@ -259,7 +268,7 @@ class FilmController extends Controller
                     'training_isi' => json_encode($value)
                 ];
                 DB::table('training')->insert($simpanTraining);
-    //            var_dump($simpanTraining);
+//                var_dump($simpanTraining);
             }
             $pPositif = $jPositif/round(($rasio * 0.01) * count($komentar));
             $pNegatif = $jNegatif/round(($rasio * 0.01) * count($komentar));
@@ -276,7 +285,7 @@ class FilmController extends Controller
                     'uji_isi' => json_encode($value)
                 ];
                 DB::table('uji')->insert($simpanUji);
-    //            var_dump($simpanUji);
+//                var_dump($simpanUji);
             }
             $akhir = 'negatif';
             if ($hasilP > $hasilN) {
@@ -284,18 +293,46 @@ class FilmController extends Controller
             }
             $simpanHasil = [
                 'hasil_film_id' => $id,
-                'hasil_hitung' => json_encode([
-                    'p' => $hasilP,
-                    'n' => $hasilN
-                ]),
                 'hasil_rasio' => $rasio,
-                'hasil_akhir' => $akhir
             ];
-    //        var_dump($simpanHasil);
+//            var_dump($simpanHasil);
             DB::table('hasil')->insert($simpanHasil);
 
+            $hasilPKomentar = [];
+            $hasilNKomentar = [];
+            $akhirKomentar = [];
+
+            foreach ($ujiKomentar as $key => $value) {
+                $hasilPKomentar[$key] = $pPositif;
+                $hasilNKomentar[$key] = $pNegatif;
+                foreach (array_values(array_unique($value)) as $key2 => $value2) {
+                    foreach ($kataUji as $key3=>$value3) {
+                        if ($key3 == $value2) {
+                            $hasilPKomentar[$key] *= $value3['p'];
+                            $hasilNKomentar[$key] *= $value3['n'];
+                        }
+                    }
+                }
+                $akhirKomentar[$key] = 'negatif';
+                if ($hasilPKomentar[$key] > $hasilNKomentar[$key]) {
+                    $akhirKomentar[$key] = 'positif';
+                }
+                $simpanUjiKomentar = [
+                    'kuji_film_id' => $id,
+                    'kuji_komentar_id' => $idUjiKomentar[$key],
+                    'kuji_hitung' => json_encode([
+                        'p' => $hasilPKomentar[$key],
+                        'n' => $hasilNKomentar[$key]
+                    ]),
+                    'kuji_rasio' => $rasio,
+                    'kuji_akhir' => $akhirKomentar[$key]
+                ];
+                DB::table('komentar_uji')->insert($simpanUjiKomentar);
+//                var_dump($simpanUjiKomentar);
+            }
+            return redirect('film/perhitungan/'.$id);
         }
-        redirect('film.perhitungan'.$id);
+        return redirect('film/perhitungan/'.$id);
 
     }
 
@@ -305,9 +342,16 @@ class FilmController extends Controller
             ->first();
         $data['training'] = DB::table('training')
             ->where('training_film_id',$data['hasil']->hasil_film_id)
+            ->where('training_rasio',$data['hasil']->hasil_rasio)
             ->get();
         $data['uji'] = DB::table('uji')
             ->where('uji_film_id',$data['hasil']->hasil_film_id)
+            ->where('uji_rasio',$data['hasil']->hasil_rasio)
+            ->get();
+        $data['komentarUji'] = DB::table('komentar_uji')
+            ->join('komentar','komentar.komentar_id','=','komentar_uji.kuji_komentar_id')
+            ->where('kuji_film_id',$data['hasil']->hasil_film_id)
+            ->where('kuji_rasio',$data['hasil']->hasil_rasio)
             ->get();
         return view('film.detail-perhitungan',$data);
     }
